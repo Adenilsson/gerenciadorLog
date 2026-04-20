@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Agente
+Exec=java -jar /home/nuc/Agente/br.com.agente.jar
+Icon=/home/nuc/Agente/icone/iconFairtek.png
+Terminal=false
