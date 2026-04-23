@@ -27,7 +27,7 @@ public class ServiceDao {
      * @throws Exception .
      */
     public ServiceDao() throws Exception {
-        //System.out.println("ServiceDao");
+        
         try {
             this.conn = MySqlConfig.getConnection();
         } catch (Exception e) {
