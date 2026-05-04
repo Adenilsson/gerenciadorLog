@@ -6,6 +6,7 @@ package br.com.agente;
 
 import br.com.monitoringcontrol.Bean.Clientes;
 import br.com.monitoringcontrol.Bean.Coordenador;
+import br.com.monitoringcontrol.Bean.SSHLogReader;
 import br.com.monitoringcontrol.Dao.ServiceDao;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -43,6 +44,10 @@ import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 import com.jcraft.jsch.*;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
+import javax.swing.JTabbedPane;
+
 
 
 /**
@@ -60,6 +65,8 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
     static public boolean status_agente ;
     public List<Clientes> clientes;
     public String servidorSelected = "";
+    private Set<Integer> abasAtivas = new HashSet<>();
+    private volatile int abaAtivaMonitorada = -1;
 
     public jFrameMonitorControl() {
         initComponents();
@@ -96,10 +103,10 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             Icon logotipo = new ImageIcon(getClass().getResource("/img/fairtek-logo.png"));
             logo.setIcon(logotipo);
 
-            Icon searchIcon = new ImageIcon(getClass().getResource("/img/lupa2.png"));
-            busca.setIcon(searchIcon);
+            //Icon searchIcon = new ImageIcon(getClass().getResource("/img/lupa2.png"));
+           // busca.setIcon(searchIcon);
 
-            Icon searchIcon2 = new ImageIcon(getClass().getResource("/img/lupa2.png"));
+            //Icon searchIcon2 = new ImageIcon(getClass().getResource("/img/lupa2.png"));
         } catch (Exception e) {
             //System.out.println("Erro ao carregar o ícone: " + e.getMessage());
         }
@@ -139,7 +146,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         select_porta = new javax.swing.JComboBox<>();
         jTbusca = new javax.swing.JTextField();
-        busca = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
@@ -198,7 +204,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGap(57, 57, 57)
                         .addComponent(jLabel4)
-                        .addGap(0, 61, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -236,8 +242,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(select_porta, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(197, 197, 197)
-                .addComponent(busca, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -247,16 +251,14 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(68, 68, 68)
                         .addComponent(jLabel1)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(8, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jLabel1)
                 .addGap(12, 12, 12)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(busca, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(select_porta, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(select_porta, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jTbusca, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(31, Short.MAX_VALUE))
@@ -306,12 +308,13 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(sizeFont, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(94, 94, 94)
-                        .addComponent(jLabel2))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGap(58, 58, 58)
                         .addComponent(textScroll)))
-                .addContainerGap(33, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel2)
+                .addGap(62, 62, 62))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -332,13 +335,11 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(33, 33, 33)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(logo, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(logo, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(31, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
@@ -366,7 +367,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         textLog.setTabSize(12);
         jScrollPane1.setViewportView(textLog);
 
-        jTabbedPane1.addTab("tab1", jScrollPane1);
+        jTabbedPane1.addTab("Servidor Principal", jScrollPane1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -391,6 +392,8 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                     .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 752, Short.MAX_VALUE)
                     .addContainerGap()))
         );
+
+        jTabbedPane1.getAccessibleContext().setAccessibleName("Servidor Pricipal");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -442,7 +445,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
         //Path caminhoArquivo = Paths.get("Agente.log");
         String portaSelecionada = (String) select_porta.getSelectedItem();
-        carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll, this.servidorSelected);
+        carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll);
 
     }//GEN-LAST:event_jTbuscaActionPerformed
 
@@ -453,10 +456,11 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
         String portaSelecionada = (String) select_porta.getSelectedItem();
         if(this.nomeSelecionado  == "Selecione a porta"){
-
-            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll,this.servidorSelected);
+            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll);
+            
         }else{
-            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll,this.servidorSelected);
+            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll);
+            
         }
     }//GEN-LAST:event_select_portaActionPerformed
 
@@ -523,135 +527,240 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                     Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 try {
-                    List<Clientes> servidores = dao.buscarTodosClientes();
-                    jfmc.criarAbasParaServidores(servidores);
+                    //List<Clientes> servidores = dao.buscarTodosClientes();
+                    jfmc.criarAbasParaServidores();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 String portaSelecionada = (String) jfmc.select_porta.getSelectedItem();
                 carregarLog(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
-                        portaSelecionada, jfmc.jTbusca, jfmc.isAgenteRodando(), jfmc.textScroll, jfmc.servidorSelected);
+                        portaSelecionada, jfmc.jTbusca, jfmc.isAgenteRodando(), jfmc.textScroll);
                 new Thread(() -> monitorarArquivo(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
-                jfmc.select_porta, jfmc.jTbusca, jfmc.isAgenteRodando(), jfmc.textScroll, jfmc.servidorSelected)).start();
+                jfmc.select_porta, jfmc.jTbusca, jfmc.isAgenteRodando(), jfmc.textScroll)).start();
             }
         });
     }
     
     private String[] buscarPortasDoBanco() {
         this.buscarClientes();
-        
-        try {
+       // try {
            
-            ServiceDao dao = new ServiceDao();
-            List<Coordenador> coordenadores = dao.buscarTodosCoordenadores();
-            String[] nomes = new String[coordenadores.size() + 1];
-            nomes[0] = "Selecione a porta"; // Definir a primeira posição
-        
-            // Preencher o restante do array com os nomes vindos do banco
-            for (int i = 0; i < coordenadores.size(); i++) {
-                nomes[i + 1] = coordenadores.get(i).getNome();
-            }
-
-            
+            //ServiceDao dao = new ServiceDao();
+            //List<Coordenador> coordenadores = dao.buscarTodosCoordenadores();
+            String[] nomes = new String[22];
+            nomes[0] = "Selecione a porta";
+            nomes[1] = "/dev/ttyUSB0";
+            nomes[2] = "/dev/ttyUSB1";
+            nomes[3] = "/dev/ttyUSB2";
+            nomes[4] = "/dev/ttyUSB3";
+            nomes[5] = "/dev/ttyUSB4";
+            nomes[6] = "/dev/ttyUSB5";
+            nomes[7] = "/dev/ttyUSB6";
+            nomes[8] = "/dev/ttyUSB7";
+            nomes[9] = "/dev/ttyUSB8";
+            nomes[10] = "/dev/ttyUSB9";
+            nomes[11] = "/dev/ttyUSB10";
+            nomes[12] = "/dev/ttyUSB11";
+            nomes[13] = "/dev/ttyUSB12";
+            nomes[14] = "/dev/ttyUSB13";
+            nomes[15] = "/dev/ttyUSB14";
+            nomes[16] = "/dev/ttyUSB15";
+            nomes[17] = "/dev/ttyUSB16";
+            nomes[18] = "/dev/ttyUSB17";
+            nomes[19] = "/dev/ttyUSB18";
+            nomes[20] = "/dev/ttyUSB19";
+            nomes[21] = "/dev/ttyUSB20";
             return nomes;
-        } catch (Exception ex) {
-            Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
-            return new String[] { "Erro ao carregar" };
-        }
+        //} catch (Exception ex) {
+        //    Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
+        //    return new String[] { "Erro ao carregar" };
+       // }
     }
     private List<Clientes> buscarClientes(){
         try {
             ServiceDao dao = new ServiceDao();
             this.clientes = dao.buscarTodosClientes(); // já retorna List<Clientes>
+            
+
+
         } catch (Exception ex) {
             Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("Lista de clientes: " + clientes);
+        
         return clientes;
     }
-    // Supondo que você já tenha o jTabbedPane1 declarado
-    private void criarAbasParaServidores(List<Clientes> servidores) {
+    private void criarAbasParaServidores() {
+        
+        List<Clientes> servidores = buscarClientes();
+        int offset = jTabbedPane1.getTabCount(); 
         for (Clientes servidor : servidores) {
-            System.out.println("###########Servidores: " + servidor.getNome());
-            JTextArea textLog = new JTextArea();
+            JTextArea textLog = new JTextArea("Aguardando seleção...");
             textLog.setEditable(false);
             JScrollPane scrollPane = new JScrollPane(textLog);
-            //scrollPane.setPreferredSize(new Dimension(0, 0));
             jTabbedPane1.addTab("Servidor: " + servidor.getNome(), scrollPane);
         }
-        //this.setLayout(new BorderLayout());
-        //this.add(jTabbedPane1, BorderLayout.CENTER);
+        // O Listener precisa saber que as abas de servidores começam após o offset
         jTabbedPane1.addChangeListener(e -> {
             int index = jTabbedPane1.getSelectedIndex();
-            String titulo = jTabbedPane1.getTitleAt(index);
-            Component comp = jTabbedPane1.getSelectedComponent();
-            if (comp instanceof JScrollPane) {
-                JScrollPane scroll = (JScrollPane) comp;
-                JViewport viewport = scroll.getViewport();
-                Component view = viewport.getView();
-                if (view instanceof JTextArea) {
-                    JTextArea textArea = (JTextArea) view;
-                    System.out.println("Aba selecionada: " + titulo);
-                    this.servidorSelected = titulo;
-                    if (this.servidorSelected == null) {
-                        Path caminho = Paths.get("/home/nuc/Agente/Agente.log");
-                        String portaSelecionada = (String) select_porta.getSelectedItem();
-                        carregarLog(caminho, textLog, jScrollPane1,
-              portaSelecionada, jTbusca, isAgenteRodando(), textScroll, this.servidorSelected);
-                    } else {
-                        // Exemplo: acessar arquivo remoto via SSH
-                        //acessarArquivoRemoto(this.servidorSelected, "/home/nuc/Agente/Agente.log");
-                    }
-
-                    Path caminho = Paths.get("/home/nuc/Agente/Agente.log");
-                    String portaSelecionada = (String) select_porta.getSelectedItem();
-                    carregarLog(caminho, textLog, jScrollPane1,
-                        portaSelecionada, jTbusca, isAgenteRodando(), textScroll, this.servidorSelected);
-                    
-                }
+            // Só age se o índice clicado for maior ou igual ao offset (abas de servidores)
+            if (index >= offset) {
+                // Ajusta índice para pegar o servidor correto na lista
+                Clientes servidorSelecionado = servidores.get(index - offset);
+                JScrollPane scroll = (JScrollPane) jTabbedPane1.getComponentAt(index);
+                JTextArea textArea = (JTextArea) scroll.getViewport().getView();
+                iniciarMonitoramentoSsh(servidorSelecionado, textArea);
             }
         });
+    }
+    private void iniciarMonitoramentoSsh(Clientes servidor, JTextArea targetTextArea) {
+        int indexAtual = jTabbedPane1.getSelectedIndex();
+    
+        // Define que APENAS esta aba deve rodar a partir de agora
+        abaAtivaMonitorada = indexAtual;
+    
+        new Thread(() -> {
+            SSHLogReader r = new SSHLogReader();
+            String portaSelecionada = (String) select_porta.getSelectedItem();
+        
+            try {
+                // O loop só executa se esta thread ainda pertencer à aba ativa
+                while (abaAtivaMonitorada == indexAtual) {
+                    int fontSize = (int) sizeFont.getValue();
+                    String texto = this.jTbusca.getText();
+                    
+                    /*String logConteudo = r.lerLogRemoto(
+                    "nuc", 
+                    "fairtek2018", 
+                    servidor.getIp(), 
+                    "/home/nuc/Agente/Agente.log"
+                    );*/
+                    String logConteudo = r.lerUltimasLinhas(
+                    "nuc", 
+                    "fairtek2018", 
+                    servidor.getIp(), 
+                    "tail -n 100 /home/nuc/Agente/Agente.log"
+                    );
+                
+                    StringBuilder filtrado = new StringBuilder();
+                    for (String linha : logConteudo.split("\n")) {
+                        boolean portaOk = this.nomeSelecionado.equals("Selecione a porta") || linha.contains(this.nomeSelecionado);
+                        boolean textoOk = texto.isEmpty() || linha.toLowerCase().contains(texto.toLowerCase());
 
+                        if (portaOk && textoOk) {
+                            filtrado.append("Servidor: ").append(servidor.getNome())
+                                .append(" - ").append(linha).append("\n");
+                        }
+                    }
+
+                    // Verifica novamente antes de atualizar a interface gráfica
+                    if (abaAtivaMonitorada != indexAtual) {
+                        break; 
+                    }
+
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        targetTextArea.setText(filtrado.toString());
+                        targetTextArea.setFont(textLog.getFont().deriveFont((float) fontSize));
+                        targetTextArea.setCaretPosition(targetTextArea.getDocument().getLength());
+                    });
+
+                    Thread.sleep(500); 
+                }
+            } catch (InterruptedException e) {
+                // Thread interrompida normalmente
+            } catch (Exception e) {
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    targetTextArea.setText("Erro na conexão dinâmica: " + e.getMessage());
+                });
+            }
+        
+            System.out.println("Thread da aba " + indexAtual + " encerrada.");
+        }).start();
     }
 
-    private static void carregarLog(Path caminhoArquivo, JTextArea textArea, JScrollPane scrollPane, String select_porta, JTextField campoBusca, boolean ativado, JRadioButton textScroll, String server) {
+    private static void carregarLog(Path caminhoArquivo, JTextArea textArea, JScrollPane scrollPane, String select_porta, JTextField campoBusca, boolean ativado, JRadioButton textScroll) {
         SwingUtilities.invokeLater(() -> {
             try {
                 if (textArea.getSelectionStart() != textArea.getSelectionEnd()) {
                     return;
                 }
+                // Capture o valor do scroll antes de limpar o texto
                 int scrollValue = scrollPane.getVerticalScrollBar().getValue();
-                List<String> linhas = Files.readAllLines(caminhoArquivo, StandardCharsets.UTF_8);
+                String busca = campoBusca.getText().toLowerCase();
+                //String portaSelecionada = select_porta.getSelectedItem().toString(); // Pegando o texto do combo
+
                 StringBuilder sb = new StringBuilder();
-                String busca = campoBusca.getText();
-                for (String linha : linhas) {
-                    if (busca == null || busca.isEmpty() || linha.toLowerCase().contains(busca.toLowerCase())) {
-                        if (server == null || server.isEmpty()) {
-                            sb.append("Servidor Principal " + " - " + linha).append("\n");
-                        }else{
-                            sb.append("Servidor " + server + " - " + linha).append("\n");
-                        } 
+                    // Usar Files.lines é mais eficiente que readAllLines para arquivos grandes
+                    List<String> linhas = Files.readAllLines(caminhoArquivo, StandardCharsets.UTF_8);
+
+                    for (String linha : linhas) {
+                        // Lógica de Filtro Consolidada
+                        boolean filtroPorta = select_porta.equals("Selecione a porta") || linha.contains(select_porta);
+                        boolean filtroBusca = busca.isEmpty() || linha.toLowerCase().contains(busca);
+
+                        // A linha só entra se passar em AMBOS os filtros ao mesmo tempo
+                        if (filtroPorta && filtroBusca) {
+                        sb.append(" Servidor Principal - ").append(linha).append("\n");
                     }
                 }
+
                 textArea.setText(sb.toString());
+
+                // Gerenciamento do Scroll e do Caret
                 if (!textScroll.isSelected()) {
+                    // Mantém a posição que o usuário estava
                     scrollPane.getVerticalScrollBar().setValue(scrollValue);
-                    int start = textArea.viewToModel(scrollPane.getViewport().getViewPosition());
-                    textArea.setCaretPosition(start);
                 } else {
+                    // Rola automaticamente para o final
                     textArea.setCaretPosition(textArea.getDocument().getLength());
                 }
-            } catch (IOException e) {
-                textArea.setText("Erro ao carregar o log: " + e.getMessage());
-            }
-        });
-    }
 
+            } catch (IOException e) {
+                 textArea.setText("Erro ao ler arquivo: " + e.getMessage());
+            }
+        });          
+            
+    }
+ 
+    private void readerLogClient(String host, String user, String password, String remoteFile){
+        System.out.println("Host: "+host+ " User: "+ user+ " Password: "+ password+ " RemotFile: "+remoteFile);
+        try {
+            JSch jsch = new JSch();
+            Session session = jsch.getSession(user, host, 22);
+            
+            session.setPassword(password);
+
+            // Ignorar verificação de host key (apenas para redes locais seguras)
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+
+            // Abrir canal de execução
+            ChannelExec channel = (ChannelExec) session.openChannel("exec");
+            channel.setCommand("cat " + remoteFile);
+
+            InputStream in = channel.getInputStream();
+            channel.connect();
+
+            // Lendo o conteúdo do log
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            String line;
+            System.out.println("--- Início do Log ---");
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            channel.disconnect();
+            session.disconnect();
+            System.out.println("--- Conexão Encerrada ---");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     
 
 
 
-    private static void monitorarArquivo(Path caminhoArquivo, JTextArea textArea,JScrollPane scrollPane, JComboBox<String> select_porta, JTextField campoBusca, boolean ativado,JRadioButton textScroll,String server) {
+    private static void monitorarArquivo(Path caminhoArquivo, JTextArea textArea,JScrollPane scrollPane, JComboBox<String> select_porta, JTextField campoBusca, boolean ativado,JRadioButton textScroll) {
        
         status_agente = isAgenteRodando();
         
@@ -663,13 +772,14 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             parent.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             while (true) {
                 WatchKey key = watchService.take();
+                
                 for (WatchEvent<?> event : key.pollEvents()) {
                     if (event.context().toString().equals(caminhoArquivo.getFileName().toString())) {
-                    // Sempre pega o valor atual da porta e do campo de busca
-                    String portaSelecionada = (String) select_porta.getSelectedItem();
-                    String filtroBusca = campoBusca.getText();
-                    carregarLog(caminhoArquivo, textArea, scrollPane,  portaSelecionada, campoBusca, status_agente, textScroll, server);
-                }
+                        // Sempre pega o valor atual da porta e do campo de busca
+                        String portaSelecionada = (String) select_porta.getSelectedItem();
+                        String filtroBusca = campoBusca.getText();
+                        carregarLog(caminhoArquivo, textArea, scrollPane,  portaSelecionada, campoBusca, status_agente, textScroll);
+                    }
                 }
                 key.reset();
             }
@@ -746,7 +856,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel busca;
     private javax.swing.JButton jBAgente;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
