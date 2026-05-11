@@ -47,7 +47,16 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.JTabbedPane;
-
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollBar;
+import javax.swing.UIManager;
 
 
 /**
@@ -67,12 +76,12 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
     public String servidorSelected = "";
     private Set<Integer> abasAtivas = new HashSet<>();
     private volatile int abaAtivaMonitorada = -1;
-
+    private static FileLock lock;
     public jFrameMonitorControl() {
         initComponents();
         status_agente = isAgenteRodando();
         System.out.println("Status_agente: "+status_agente);
-        textScroll.setSelected(true);
+        
         if(status_agente){
             status_agente = false;
             jBAgente.setText("Ativo");
@@ -112,6 +121,8 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         }
         //jBAgente.setBackground(Color.red);
         select_porta.setModel(new javax.swing.DefaultComboBoxModel<>(buscarPortasDoBanco()));
+        this.buscarClientes();
+        this.preencherClientesNoPanel();
         select_porta.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 select_portaActionPerformed(evt);
@@ -147,11 +158,12 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         select_porta = new javax.swing.JComboBox<>();
         jTbusca = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         sizeFont = new javax.swing.JSpinner();
-        textScroll = new javax.swing.JRadioButton();
+        jPanel5 = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
         textLog = new javax.swing.JTextArea();
@@ -183,8 +195,8 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         jPanel4.setBackground(new java.awt.Color(204, 204, 204));
         jPanel4.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(153, 153, 255)));
 
-        jLabel4.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
-        jLabel4.setText("Agente");
+        jLabel4.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
+        jLabel4.setText("Status Agente Principal");
 
         jBAgente.setText("Desativado");
         jBAgente.addActionListener(new java.awt.event.ActionListener() {
@@ -202,7 +214,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jBAgente, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(57, 57, 57)
+                        .addGap(8, 8, 8)
                         .addComponent(jLabel4)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -232,17 +244,16 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
         jLabel1.setText("Filtros");
+
+        jLabel5.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
+        jLabel5.setText("Pesquisa");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(select_porta, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -252,6 +263,15 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                         .addGap(68, 68, 68)
                         .addComponent(jLabel1)))
                 .addContainerGap(8, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(select_porta, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(54, 54, 54)
+                        .addComponent(jLabel5)))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -260,14 +280,16 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 .addGap(12, 12, 12)
                 .addComponent(select_porta, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
+                .addComponent(jLabel5)
+                .addGap(2, 2, 2)
                 .addComponent(jTbusca, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(31, Short.MAX_VALUE))
+                .addContainerGap(19, Short.MAX_VALUE))
         );
 
         jPanel3.setBackground(new java.awt.Color(204, 204, 204));
         jPanel3.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(153, 153, 255)));
 
-        jLabel2.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
         jLabel2.setText("Ajustes");
 
         jLabel3.setText("Font:");
@@ -289,13 +311,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             }
         });
 
-        textScroll.setText("Scroll");
-        textScroll.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                textScrollActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -308,13 +323,9 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(sizeFont, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(58, 58, 58)
-                        .addComponent(textScroll)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jLabel2)
-                .addGap(62, 62, 62))
+                        .addGap(60, 60, 60)
+                        .addComponent(jLabel2)))
+                .addContainerGap(44, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -324,9 +335,29 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(sizeFont, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(textScroll)
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addContainerGap(49, Short.MAX_VALUE))
+        );
+
+        jPanel5.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel5.addAncestorListener(new javax.swing.event.AncestorListener() {
+            public void ancestorAdded(javax.swing.event.AncestorEvent evt) {
+                jPanel5AncestorAdded(evt);
+            }
+            public void ancestorMoved(javax.swing.event.AncestorEvent evt) {
+            }
+            public void ancestorRemoved(javax.swing.event.AncestorEvent evt) {
+            }
+        });
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 195, Short.MAX_VALUE)
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 197, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -337,9 +368,10 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 .addGap(33, 33, 33)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(logo, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(logo, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(31, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
@@ -353,7 +385,9 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(254, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(45, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addHierarchyListener(new java.awt.event.HierarchyListener() {
@@ -375,11 +409,11 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 909, Short.MAX_VALUE))
+                .addGap(0, 1049, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                     .addGap(262, 262, 262)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 900, Short.MAX_VALUE)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1040, Short.MAX_VALUE)
                     .addContainerGap()))
         );
         layout.setVerticalGroup(
@@ -408,11 +442,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         //busca.setIcon(search);
 
     }//GEN-LAST:event_jPanel2AncestorAdded
-
-    private void textScrollActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textScrollActionPerformed
-        // TODO add your handling code here:
-        System.out.println("TextScroll: "+ textScroll.isSelected());
-    }//GEN-LAST:event_textScrollActionPerformed
 
     private void sizeFontStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_sizeFontStateChanged
         // Obtém o valor do controle (por exemplo, um JSpinner ou JSlider)
@@ -445,7 +474,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
         //Path caminhoArquivo = Paths.get("Agente.log");
         String portaSelecionada = (String) select_porta.getSelectedItem();
-        carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll);
+        carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando());
 
     }//GEN-LAST:event_jTbuscaActionPerformed
 
@@ -456,10 +485,10 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
         String portaSelecionada = (String) select_porta.getSelectedItem();
         if(this.nomeSelecionado  == "Selecione a porta"){
-            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll);
+            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando());
             
         }else{
-            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando(),textScroll);
+            carregarLog(caminhoArquivo, textLog,jScrollPane1, portaSelecionada,jTbusca,isAgenteRodando());
             
         }
     }//GEN-LAST:event_select_portaActionPerformed
@@ -500,49 +529,117 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jTabbedPane1HierarchyChanged
 
+    private void jPanel5AncestorAdded(javax.swing.event.AncestorEvent evt) {//GEN-FIRST:event_jPanel5AncestorAdded
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jPanel5AncestorAdded
+
         /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
+    public static void main(String[] args) {
+        if (!obterLockUnico()) {
+            System.out.println("O programa já está em execução.");
+            System.exit(1);
+        }
+
+        configurarLookAndFeel();
+       
+        java.awt.EventQueue.invokeLater(() -> {
+            try {
+                
+                iniciarAplicacao();
+            } catch (Exception e) {
+                Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, e);
+            }
+        });
+    }
+
+    private static boolean obterLockUnico() {
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            File file = new File(System.getProperty("java.io.tmpdir"), "monitorLog.lock");
+            FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
+            lock = channel.tryLock();
+            return lock != null;
+        } catch (Exception e) {
+            Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, e);
+            return false;
+        }
+    }
+
+    private static void configurarLookAndFeel() {
+        try {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
         } catch (Exception ex) {
-            java.util.logging.Logger.getLogger(jFrameMonitorControl.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
         }
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                //Path caminhoArquivo = Paths.get("C:/Users/noslineda/Documents/NetBeansProjects/Agente.log");
-                Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
-                jFrameMonitorControl jfmc = new jFrameMonitorControl();
-                jfmc.setVisible(true);
-                ServiceDao dao = null;
-                try {
-                    dao = new ServiceDao();
-                } catch (Exception ex) {
-                    Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                try {
-                    //List<Clientes> servidores = dao.buscarTodosClientes();
-                    jfmc.criarAbasParaServidores();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                String portaSelecionada = (String) jfmc.select_porta.getSelectedItem();
-                carregarLog(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
-                        portaSelecionada, jfmc.jTbusca, jfmc.isAgenteRodando(), jfmc.textScroll);
-                new Thread(() -> monitorarArquivo(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
-                jfmc.select_porta, jfmc.jTbusca, jfmc.isAgenteRodando(), jfmc.textScroll)).start();
-            }
-        });
+    }
+
+    private static void iniciarAplicacao() throws Exception {
+        Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
+        jFrameMonitorControl jfmc = new jFrameMonitorControl();
+        jfmc.setVisible(true);
+
+        ServiceDao dao = new ServiceDao();
+        jfmc.criarAbasParaServidores();
+
+        String portaSelecionada = (String) jfmc.select_porta.getSelectedItem();
+        carregarLog(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
+                portaSelecionada, jfmc.jTbusca, jfmc.isAgenteRodando());
+
+        new Thread(() -> monitorarArquivo(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
+                jfmc.select_porta, jfmc.jTbusca, jfmc.isAgenteRodando())).start();
     }
     
+    
+    private void preencherClientesNoPanel() {
+        try {
+            jPanel5.removeAll();
+            jPanel5.setLayout(new javax.swing.BoxLayout(jPanel5, javax.swing.BoxLayout.Y_AXIS));
+            ServiceDao dao = new ServiceDao();     
+            List<Clientes> clientes = dao.buscarTodosClientes();
+     
+            for (Clientes c : clientes) {
+                JButton btn = new JButton(c.getNome()+ " - "+ c.getIp());
+                btn.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+                btn.setForeground(java.awt.Color.WHITE);
+                btn.setBackground(new java.awt.Color(0, 102, 204));
+
+                btn.addActionListener(e -> {
+                    try {
+                        
+                        //String comando = "ssh -p 22 nuc@" + c.getIp() + " 'cd /home/nuc/Agente && tail -f Agente.log'";
+                        //new ProcessBuilder("gnome-terminal", "--", "bash", "-c", comando + "; exec bash").start();
+                        String comando = "sshpass -p fairtek2018 ssh -p 22 nuc@" + c.getIp() + " 'cd /home/nuc/Agente && tail -f Agente.log'";
+                        new ProcessBuilder("gnome-terminal", "--", "bash", "-c", comando + "; exec bash").start();
+
+                        System.out.println(comando);
+                       
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(null, "Erro ao executar SSH: " + ex.getMessage());
+                    }
+                });
+
+                jPanel5.add(btn);
+                jPanel5.add(Box.createVerticalStrut(8));
+            }
+
+
+            jPanel5.revalidate();
+            jPanel5.repaint();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Erro ao carregar clientes: " + ex.getMessage());
+        }
+    }
+
+
     private String[] buscarPortasDoBanco() {
-        this.buscarClientes();
+        //this.buscarClientes();
+        //this.preencherClientesNoPanel();
        // try {
            
             //ServiceDao dao = new ServiceDao();
@@ -580,17 +677,12 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         try {
             ServiceDao dao = new ServiceDao();
             this.clientes = dao.buscarTodosClientes(); // já retorna List<Clientes>
-            
-
-
         } catch (Exception ex) {
             Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
         return clientes;
     }
     private void criarAbasParaServidores() {
-        
         List<Clientes> servidores = buscarClientes();
         int offset = jTabbedPane1.getTabCount(); 
         for (Clientes servidor : servidores) {
@@ -627,18 +719,11 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 while (abaAtivaMonitorada == indexAtual) {
                     int fontSize = (int) sizeFont.getValue();
                     String texto = this.jTbusca.getText();
-                    
-                    /*String logConteudo = r.lerLogRemoto(
-                    "nuc", 
-                    "fairtek2018", 
-                    servidor.getIp(), 
-                    "/home/nuc/Agente/Agente.log"
-                    );*/
                     String logConteudo = r.lerUltimasLinhas(
                     "nuc", 
                     "fairtek2018", 
                     servidor.getIp(), 
-                    "tail -n 100 /home/nuc/Agente/Agente.log"
+                    "/home/nuc/Agente/Agente.log"
                     );
                 
                     StringBuilder filtrado = new StringBuilder();
@@ -651,7 +736,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                                 .append(" - ").append(linha).append("\n");
                         }
                     }
-
                     // Verifica novamente antes de atualizar a interface gráfica
                     if (abaAtivaMonitorada != indexAtual) {
                         break; 
@@ -662,7 +746,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                         targetTextArea.setFont(textLog.getFont().deriveFont((float) fontSize));
                         targetTextArea.setCaretPosition(targetTextArea.getDocument().getLength());
                     });
-
                     Thread.sleep(500); 
                 }
             } catch (InterruptedException e) {
@@ -672,12 +755,11 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                     targetTextArea.setText("Erro na conexão dinâmica: " + e.getMessage());
                 });
             }
-        
             System.out.println("Thread da aba " + indexAtual + " encerrada.");
         }).start();
     }
 
-    private static void carregarLog(Path caminhoArquivo, JTextArea textArea, JScrollPane scrollPane, String select_porta, JTextField campoBusca, boolean ativado, JRadioButton textScroll) {
+    private static void carregarLog(Path caminhoArquivo, JTextArea textArea, JScrollPane scrollPane, String select_porta, JTextField campoBusca, boolean ativado) {
         SwingUtilities.invokeLater(() -> {
             try {
                 if (textArea.getSelectionStart() != textArea.getSelectionEnd()) {
@@ -702,23 +784,14 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                         sb.append(" Servidor Principal - ").append(linha).append("\n");
                     }
                 }
-
                 textArea.setText(sb.toString());
 
                 // Gerenciamento do Scroll e do Caret
-                if (!textScroll.isSelected()) {
-                    // Mantém a posição que o usuário estava
-                    scrollPane.getVerticalScrollBar().setValue(scrollValue);
-                } else {
-                    // Rola automaticamente para o final
-                    textArea.setCaretPosition(textArea.getDocument().getLength());
-                }
-
+               
             } catch (IOException e) {
                  textArea.setText("Erro ao ler arquivo: " + e.getMessage());
             }
-        });          
-            
+        });      
     }
  
     private void readerLogClient(String host, String user, String password, String remoteFile){
@@ -726,20 +799,15 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         try {
             JSch jsch = new JSch();
             Session session = jsch.getSession(user, host, 22);
-            
             session.setPassword(password);
-
             // Ignorar verificação de host key (apenas para redes locais seguras)
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect();
-
             // Abrir canal de execução
             ChannelExec channel = (ChannelExec) session.openChannel("exec");
             channel.setCommand("cat " + remoteFile);
-
             InputStream in = channel.getInputStream();
             channel.connect();
-
             // Lendo o conteúdo do log
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line;
@@ -747,7 +815,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }
-
             channel.disconnect();
             session.disconnect();
             System.out.println("--- Conexão Encerrada ---");
@@ -756,14 +823,10 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    
-
-
-
-    private static void monitorarArquivo(Path caminhoArquivo, JTextArea textArea,JScrollPane scrollPane, JComboBox<String> select_porta, JTextField campoBusca, boolean ativado,JRadioButton textScroll) {
+    private static void monitorarArquivo(Path caminhoArquivo, JTextArea textArea,JScrollPane scrollPane, JComboBox<String> select_porta, JTextField campoBusca, boolean ativado) {
        
         status_agente = isAgenteRodando();
-        
+        int scrollValue = scrollPane.getVerticalScrollBar().getValue();
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             //Path caminho = Paths.get("C:/Users/noslineda/Documents/NetBeansProjects/Agente.log");
             Path caminho = Paths.get("/home/nuc/Agente/Agente.log");
@@ -772,17 +835,48 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             parent.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             while (true) {
                 WatchKey key = watchService.take();
-                
+
                 for (WatchEvent<?> event : key.pollEvents()) {
                     if (event.context().toString().equals(caminhoArquivo.getFileName().toString())) {
-                        // Sempre pega o valor atual da porta e do campo de busca
+                        SwingUtilities.invokeLater(() -> {
+                            //Captura os valores ANTES de carregar o novo log
+                            JScrollBar vertical = scrollPane.getVerticalScrollBar();
+                            int currentScrollValue = vertical.getValue();
+    
+                            // Verifica se o usuário está no fim (com uma margem de erro de 10 pixels)
+                            boolean isAtBottom = (vertical.getValue() + vertical.getVisibleAmount()) >= (vertical.getMaximum() + 100);
+                            String portaSelecionada = (String) select_porta.getSelectedItem();
+                            //Carrega o log
+                            carregarLog(caminhoArquivo, textArea, scrollPane, portaSelecionada, campoBusca, status_agente);
+                            
+                            //Aguarda o Swing processar o novo tamanho do texto para ajustar o scroll
+                            SwingUtilities.invokeLater(() -> {
+                            
+                        });
+                    });
+                    // Rodar a atualização na thread da interface
+                    /*SwingUtilities.invokeLater(() -> {
+                        //Salva a posição atual antes de carregar
+                        int currentScrollValue = scrollPane.getVerticalScrollBar().getValue();
+                
                         String portaSelecionada = (String) select_porta.getSelectedItem();
-                        String filtroBusca = campoBusca.getText();
-                        carregarLog(caminhoArquivo, textArea, scrollPane,  portaSelecionada, campoBusca, status_agente, textScroll);
-                    }
+                
+                        //Carrega o log (isso altera o conteúdo do textArea)
+                        carregarLog(caminhoArquivo, textArea, scrollPane, portaSelecionada, campoBusca, status_agente, textScroll);
+
+                        //Aplica a lógica de scroll após o carregamento
+                        if (!textScroll.isSelected()) {
+                            // Mantém onde o usuário estava
+                            scrollPane.getVerticalScrollBar().setValue(currentScrollValue);
+                        } else {
+                            // Rola para o fim
+                            textArea.setCaretPosition(textArea.getDocument().getLength());
+                        }
+                    });*/
                 }
-                key.reset();
             }
+            if (!key.reset()) break;
+}
         } catch (IOException | InterruptedException e) {
             SwingUtilities.invokeLater(() -> textArea.setText("Erro ao monitorar o arquivo: " + e.getMessage()));
         }
@@ -823,9 +917,9 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()))) {
                         String linha;
-                    while ((linha = reader.readLine()) != null) {
+                    //while ((linha = reader.readLine()) != null) {
                         //System.out.println(linha);
-                    }
+                    //}
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -861,10 +955,12 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField jTbusca;
@@ -872,6 +968,5 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> select_porta;
     private javax.swing.JSpinner sizeFont;
     private javax.swing.JTextArea textLog;
-    private javax.swing.JRadioButton textScroll;
     // End of variables declaration//GEN-END:variables
 }

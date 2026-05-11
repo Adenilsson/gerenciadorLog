@@ -12,6 +12,8 @@ import com.jcraft.jsch.*;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import static java.lang.System.in;
+import java.nio.charset.StandardCharsets;
 
 public class SSHLogReader {
 
@@ -24,7 +26,7 @@ public class SSHLogReader {
         JSch jsch = new JSch();
         Session session = null;
         ChannelExec channel = null;
-        System.out.println("==============================================");
+        
         try {
             // 1. Configura a sessão
             session = jsch.getSession(usuario, host, 22);
@@ -75,47 +77,50 @@ public class SSHLogReader {
 
     public String lerUltimasLinhas(String usuario, String senha, String ip, String caminhoArquivo) {
         StringBuilder conteudo = new StringBuilder();
+        Session session = null;
+        ChannelExec channel = null;
+
         try {
             JSch jsch = new JSch();
             // Criar a sessão
-            Session session = jsch.getSession(usuario, ip, 22);
+            session = jsch.getSession(usuario, ip, 22);
             session.setPassword(senha);
-        
+
             // Configuração para não pedir confirmação de chave (fingerprint)
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect();
 
-            // Abrir o canal de EXECUÇÃO (exec) em vez de SFTP
-            ChannelExec channel = (ChannelExec) session.openChannel("exec");
-        
+            // Abrir o canal de execução
+            channel = (ChannelExec) session.openChannel("exec");
+
             // O comando que será executado no Linux
-            String comando = "tail -n 1000 " + caminhoArquivo;
+            String comando = "tail -n 20000 " + caminhoArquivo;
             channel.setCommand(comando);
 
-            // Ler a resposta do comando
+            // Ler a resposta do comando com BufferedReader
             InputStream in = channel.getInputStream();
             channel.connect();
 
-            byte[] tmp = new byte[1024];
-            while (true) {
-                while (in.available() > 0) {
-                    int i = in.read(tmp, 0, 1024);
-                    if (i < 0) break;
-                    conteudo.append(new String(tmp, 0, i));
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    conteudo.append(line).append("\n");
                 }
-                if (channel.isClosed()) {
-                    if (in.available() > 0) continue;
-                    break;
-                }
-                try { Thread.sleep(100); } catch (Exception ee) {}
             }
 
-            channel.disconnect();
-            session.disconnect();
+             // Esperar o canal fechar
+            while (!channel.isClosed()) {
+                Thread.sleep(100);
+            }
 
         } catch (Exception e) {
             return "Erro ao ler log: " + e.getMessage();
+        } finally {
+            if (channel != null) channel.disconnect();
+            if (session != null) session.disconnect();
         }
+
         return conteudo.toString();
     }
+
 }
