@@ -75,9 +75,9 @@ public class ServiceDao {
             throw new Exception(sqle);
         }
     }
-    public List<Clientes> buscarTodosClientes() throws Exception {
+    public List<Clientes> buscarTodosServidores() throws Exception {
         List<Clientes> clientes = new ArrayList<>();
-        String SQL = "SELECT * FROM  fairtek.tb_clientes";
+        String SQL = "SELECT * FROM  fairtek.tb_servidores";
         try {
             this.ps = conn.prepareStatement(SQL);
             this.rs = this.ps.executeQuery();
@@ -88,6 +88,7 @@ public class ServiceDao {
                 c.setNome(rs.getString("nome"));
                 c.setIp(rs.getString("ip"));
                 c.setAtivo(rs.getInt("ativo"));
+                c.setPrincipal(rs.getInt("principal"));
                 clientes.add(c);
             }
             //System.out.println("Lista de cliente: "+clientes);

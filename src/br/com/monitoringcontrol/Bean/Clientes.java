@@ -13,6 +13,15 @@ public class Clientes {
     private String nome;
     private String ip;
     private int ativo;
+    private int principal;
+
+    public int getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(int principal) {
+        this.principal = principal;
+    }
 
     public int getId() {
         return id;

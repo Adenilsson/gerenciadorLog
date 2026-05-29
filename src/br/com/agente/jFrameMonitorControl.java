@@ -142,8 +142,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         sizeFont = new javax.swing.JSpinner();
         jPanel5 = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        textLog = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -375,13 +373,6 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             }
         });
 
-        textLog.setColumns(20);
-        textLog.setRows(5);
-        textLog.setTabSize(12);
-        jScrollPane1.setViewportView(textLog);
-
-        jTabbedPane1.addTab("Servidor Principal", jScrollPane1);
-
         jMenu1.setText("Ferramentas");
 
         jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_M, java.awt.event.InputEvent.CTRL_DOWN_MASK));
@@ -416,9 +407,14 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         );
 
         jTabbedPane1.getAccessibleContext().setAccessibleName("Servidor Pricipal");
+        jTabbedPane1.getAccessibleContext().setAccessibleName("");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jTabbedPane1HierarchyChanged(java.awt.event.HierarchyEvent evt) {//GEN-FIRST:event_jTabbedPane1HierarchyChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTabbedPane1HierarchyChanged
 
     private void jPanel2AncestorAdded(javax.swing.event.AncestorEvent evt) {// GEN-FIRST:event_jPanel2AncestorAdded
         // TODO add your handling code here:
@@ -428,7 +424,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         // Obtém o valor do controle (por exemplo, um JSpinner ou JSlider)
         int fontSize = (int) sizeFont.getValue();
         // Cria uma nova fonte com o tamanho desejado, mantendo o nome e estilo atuais
-        textLog.setFont(textLog.getFont().deriveFont((float) fontSize));
+        //textLog.setFont(textLog.getFont().deriveFont((float) fontSize));
         // Path caminhoArquivo =
         // Paths.get("C:/Users/noslineda/Documents/NetBeansProjects/Agente.log");
         // carregarLog(caminhoArquivo, textLog, filtro);
@@ -451,7 +447,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
         // Path caminhoArquivo = Paths.get("Agente.log");
         String portaSelecionada = (String) select_porta.getSelectedItem();
-        carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada, jTbusca, isAgenteRodando());
+        //carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada, jTbusca, isAgenteRodando());
 
     }// GEN-LAST:event_jTbuscaActionPerformed
 
@@ -463,9 +459,9 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
         String portaSelecionada = (String) select_porta.getSelectedItem();
         if (this.nomeSelecionado == "Selecione a porta") {
-            carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada, jTbusca, isAgenteRodando());
+           // carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada, jTbusca, isAgenteRodando());
         } else {
-            carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada, jTbusca, isAgenteRodando());
+            //carregarLog(caminhoArquivo, textLog, jScrollPane1, portaSelecionada, jTbusca, isAgenteRodando());
         }
     }// GEN-LAST:event_select_portaActionPerformed
 
@@ -496,9 +492,9 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         // TODO add your handling code here:
     }// GEN-LAST:event_logoAncestorAdded
 
-    private void jTabbedPane1HierarchyChanged(java.awt.event.HierarchyEvent evt) {// GEN-FIRST:event_jTabbedPane1HierarchyChanged
+    //private void jTabbedPane1HierarchyChanged(java.awt.event.HierarchyEvent evt) {// GEN-FIRST:event_jTabbedPane1HierarchyChanged
         // TODO add your handling code here:
-    }// GEN-LAST:event_jTabbedPane1HierarchyChanged
+    //}// GEN-LAST:event_jTabbedPane1HierarchyChanged
 
     private void jPanel5AncestorAdded(javax.swing.event.AncestorEvent evt) {// GEN-FIRST:event_jPanel5AncestorAdded
         // TODO add your handling code here:
@@ -565,10 +561,8 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         ServiceDao dao = new ServiceDao();
         jfmc.criarAbasParaServidores();
         String portaSelecionada = (String) jfmc.select_porta.getSelectedItem();
-        carregarLog(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
-                portaSelecionada, jfmc.jTbusca, jfmc.isAgenteRodando());
-        new Thread(() -> monitorarArquivo(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,
-                jfmc.select_porta, jfmc.jTbusca, jfmc.isAgenteRodando())).start();
+        //carregarLog(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,portaSelecionada, jfmc.jTbusca, jfmc.isAgenteRodando());
+        //new Thread(() -> monitorarArquivo(caminhoArquivo, jfmc.textLog, jfmc.jScrollPane1,jfmc.select_porta, jfmc.jTbusca, jfmc.isAgenteRodando())).start();
     }
 
     private void preencherClientesNoPanel() {
@@ -576,40 +570,36 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             jPanel5.removeAll();
             jPanel5.setLayout(new javax.swing.BoxLayout(jPanel5, javax.swing.BoxLayout.Y_AXIS));
             ServiceDao dao = new ServiceDao();
-            List<Clientes> clientes = dao.buscarTodosClientes();
-            JButton btn = new JButton("Servidor Principal");
-                btn.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
-                btn.setForeground(java.awt.Color.WHITE);
-                btn.setBackground(new java.awt.Color(0, 102, 204));
-                btn.addActionListener(e -> {
-                    try {
-                        //String comando = "sshpass -p fairtek2018 ssh -p 22 nuc@" + c.getIp() + " 'cd /home/nuc/Agente && tail -f Agente.log'";
-                        String comando = "cd /home/nuc/Agente && tail -f Agente.log";
-
-                        new ProcessBuilder("gnome-terminal", "--", "bash", "-c", comando + "; exec bash").start();
-                        
-                        
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Erro ao executar SSH: " + ex.getMessage());
-                    }
-                });
-                jPanel5.add(btn);
-                jPanel5.add(Box.createVerticalStrut(8));
-            
+            List<Clientes> clientes = dao.buscarTodosServidores();
+            JButton btn = new JButton();
+                
+            String titulo ="";
             for (Clientes c : clientes) {
-                btn = new JButton(c.getNome() + " - " + c.getIp());
+                if(c.getPrincipal()==1){
+                    titulo = "Servidor Principal \n";
+                     btn = new JButton(titulo);
+                }else{
+                    titulo =c.getNome();
+                    btn = new JButton(titulo + " - " + c.getIp());
+                }
+                
                 btn.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
                 btn.setForeground(java.awt.Color.WHITE);
                 btn.setBackground(new java.awt.Color(0, 102, 204));
                 btn.addActionListener(e -> {
                     try {
                         //String comando = "sshpass -p fairtek2018 ssh -p 22 nuc@" + c.getIp() + " 'cd /home/nuc/Agente && tail -f Agente.log'";
-                        String comando = "sshpass -p fairtek2018 ssh -p 22 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null nuc@" 
-                            + c.getIp() 
-                            + " 'cd /home/nuc/Agente && tail -f Agente.log'";
+                        if(c.getPrincipal()==1){
+                            String comando = "cd /home/nuc/Agente && tail -f Agente.log";
 
-                        new ProcessBuilder("gnome-terminal", "--", "bash", "-c", comando + "; exec bash").start();
-                        
+                            new ProcessBuilder("gnome-terminal", "--", "bash", "-c", comando + "; exec bash").start();
+                        }else{
+                            String comando = "sshpass -p fairtek2018 ssh -p 22 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null nuc@" 
+                                + c.getIp() 
+                                + " 'cd /home/nuc/Agente && tail -f Agente.log'";
+
+                            new ProcessBuilder("gnome-terminal", "--", "bash", "-c", comando + "; exec bash").start();
+                        }
                         
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null, "Erro ao executar SSH: " + ex.getMessage());
@@ -655,7 +645,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
     private List<Clientes> buscarClientes() {
         try {
             ServiceDao dao = new ServiceDao();
-            this.clientes = dao.buscarTodosClientes(); // já retorna List<Clientes>
+            this.clientes = dao.buscarTodosServidores(); // já retorna List<Clientes>
         } catch (Exception ex) {
             Logger.getLogger(jFrameMonitorControl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -680,8 +670,11 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
             // Garante que o scrollPane ocupe todo o espaço da aba
             scrollPane.setPreferredSize(new Dimension(400, 300));
             scrollPane.setMinimumSize(new Dimension(200, 150));
-
-            jTabbedPane1.addTab("Servidor: " + servidor.getNome(), scrollPane);
+            if(servidor.getPrincipal() == 1){
+                jTabbedPane1.addTab("Servidor Principal: " + servidor.getNome(), scrollPane);
+            }else{
+                jTabbedPane1.addTab("Servidor: " + servidor.getNome(), scrollPane);
+            }
         }
         // Listener para seleção de abas
         jTabbedPane1.addChangeListener(e -> {
@@ -708,32 +701,45 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
                 while (abaAtivaMonitorada == indexAtual) {
                     int fontSize = (int) sizeFont.getValue();
                     String texto = this.jTbusca.getText();
-                    String logConteudo = r.lerUltimasLinhas(
-                            "nuc",
-                            "fairtek2018",
-                            servidor.getIp(),
-                            "/home/nuc/Agente/Agente.log");
-
+                    String logConteudo="";
                     StringBuilder filtrado = new StringBuilder();
+                    String titulo ="";
+                    if (servidor.getPrincipal() == 1) {
+                        titulo = "Servidor Principal";
+                        Path caminhoArquivo = Paths.get("/home/nuc/Agente/Agente.log");
+                        List<String> linhas = Files.readAllLines(caminhoArquivo, StandardCharsets.UTF_8);
+                        logConteudo = String.join("\n", linhas);
+                         //System.out.println(logConteudo);
+                    } else {
+                        titulo = "Servidor:";
+                        logConteudo = r.lerUltimasLinhas(
+                    "nuc", "fairtek2018", servidor.getIp(), "/home/nuc/Agente/Agente.log"
+                        );
+                    }
                     for (String linha : logConteudo.split("\n")) {
-                        boolean portaOk = this.nomeSelecionado.equals("Selecione a porta")
-                                || linha.contains(this.nomeSelecionado);
+                        boolean portaOk = this.nomeSelecionado.equals("Selecione a porta") || linha.contains(this.nomeSelecionado);
                         boolean textoOk = texto.isEmpty() || linha.toLowerCase().contains(texto.toLowerCase());
 
                         if (portaOk && textoOk) {
-                            filtrado.append("Servidor: ").append(servidor.getNome())
-                                    .append(" - ").append(linha).append("\n");
+                            filtrado.append(titulo)
+                            .append(" ")
+                            .append(servidor.getNome())
+                            .append(" - ")
+                            .append(linha)
+                            .append("\n");
                         }
                     }
+                    
                     // Verifica novamente antes de atualizar a interface gráfica
                     if (abaAtivaMonitorada != indexAtual) {
                         break;
                     }
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         targetTextArea.setText(filtrado.toString());
-                        targetTextArea.setFont(textLog.getFont().deriveFont((float) fontSize));
+                        targetTextArea.setFont(targetTextArea.getFont().deriveFont((float) fontSize));
                         targetTextArea.setCaretPosition(targetTextArea.getDocument().getLength());
                     });
+
                     Thread.sleep(500);
                 }
             } catch (InterruptedException e) {
@@ -747,7 +753,7 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
         }).start();
     }
     private static void carregarLog(Path caminhoArquivo, JTextArea textArea, JScrollPane scrollPane,
-            String select_porta, JTextField campoBusca, boolean ativado) {
+        String select_porta, JTextField campoBusca, boolean ativado) {
         SwingUtilities.invokeLater(() -> {
             try {
                 if (textArea.getSelectionStart() != textArea.getSelectionEnd()) {
@@ -936,12 +942,10 @@ public class jFrameMonitorControl extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField jTbusca;
     private javax.swing.JLabel logo;
     private javax.swing.JComboBox<String> select_porta;
     private javax.swing.JSpinner sizeFont;
-    private javax.swing.JTextArea textLog;
     // End of variables declaration//GEN-END:variables
 }
